@@ -3,104 +3,81 @@ import pandas as pd
 import time
 import random
 
-# ——— Page Config ———
-st.set_page_config(page_title="BMI Calculator & Health Advisor", layout="centered")
-st.title("💪 BMI Calculator & Health Advisor")
+# Page setup
+st.set_page_config(page_title="BMI & Health Advisor", layout="centered")
 
-# ——— User Inputs ———
-weight = st.number_input("Enter your weight (in kg):", min_value=1.0, step=0.1)
-height = st.number_input("Enter your height (in meters):", min_value=0.1, step=0.01)
+st.title("🧮 BMI Calculator & Health Advisor")
 
-# ——— BMI Calculation & Animated Progress ———
-if weight and height:
-    bmi = weight / (height ** 2)
-    st.markdown(f"### 📏 Your BMI is: **{bmi:.2f}**")
+# Input
+age = st.number_input("Enter your age", min_value=1, max_value=120)
+height = st.number_input("Enter height (in cm)", min_value=50.0, max_value=250.0)
+weight = st.number_input("Enter weight (in kg)", min_value=10.0, max_value=300.0)
 
-    # Smooth progress-bar animation
-    bar = st.progress(0)
-    target = int(min(bmi / 40, 1.0) * 100)
-    for i in range(target + 1):
-        time.sleep(0.01)
-        bar.progress(i)
+# Calculate BMI
+if height > 0:
+    bmi = round(weight / ((height / 100) ** 2), 2)
+    st.markdown(f"### 🧾 Your BMI is: `{bmi}`")
 
-    # ——— Determine Category & Celebration ———
+    # Determine category
     if bmi < 18.5:
         category = "Underweight"
-        st.warning("You are underweight. 🍃")
-        st.snow()  # gentle snow effect
-        tips = [
-            "Include more calories from healthy fats & proteins.",
-            "Eat smaller meals more frequently.",
-            "Incorporate strength training."
-        ]
-    elif bmi < 25:
+        color = "blue"
+    elif 18.5 <= bmi < 24.9:
         category = "Normal"
-        st.success("You have a normal weight. Great job! ✨")
-        st.balloons()  # celebratory balloons
-        tips = [
-            "Maintain your balanced diet.",
-            "Stay active with regular exercise.",
-            "Keep drinking plenty of water."
-        ]
-    elif bmi < 30:
+        color = "green"
+    elif 25 <= bmi < 29.9:
         category = "Overweight"
-        st.info("You are overweight. ⚠️")
-        st.snow()  # gentle snow effect for Overweight too
-        tips = [
-            "Reduce sugary & fried foods.",
-            "Aim for 30 min of walking daily.",
-            "Get 7–8 hours of sleep."
-        ]
+        color = "orange"
     else:
         category = "Obese"
-        st.error("You are obese. ❤️‍🩹")
-        st.spinner("Let’s take this step by step. 👣")  # A calming effect for obese category
-        st.balloons()  # Add balloons for encouragement
-        st.audio("heartbeat.mp3", start_time=0)  # Play heartbeat sound effect for Obese
-        tips = [
-            "Consult a healthcare provider.",
-            "Practice portion control.",
-            "Start with low-impact exercises."
-        ]
+        color = "red"
 
-    # ——— Health Tips ———
-    st.markdown("### 🩺 Health Tips")
-    for tip in tips:
-        st.write("•", tip)
+    st.markdown(f"<h3 style='color:{color};'>Category: {category}</h3>", unsafe_allow_html=True)
 
-    # ——— Motivational Quote ———
-    quotes = [
-        "“Take care of your body. It's the only place you have to live.”",
-        "“A journey of a thousand miles begins with a single step.”",
-        "“Small progress each day adds up to big results!”"
-    ]
-    st.markdown(f"**💬 Motivation:** *{random.choice(quotes)}*")
-
-    # ——— Confetti for Success ———
+    # Balloon for Normal
     if category == "Normal":
-        st.balloons()  # Add balloons for positive feedback when the BMI is in the normal range.
+        st.balloons()
 
-    # ——— BMI Class Distribution Chart ———
-    st.markdown("---")
-    st.subheader("📊 BMI Class Distribution in Dataset")
+    # ❤️ Heartbeat sound for Obese (autoplay + fallback)
+    if category == "Obese":
+        st.markdown("## 🚨 Health Alert!")
+        st.markdown("""
+            <audio autoplay>
+                <source src="heartbeat-sound-effects-for-you-122458.mp3" type="audio/mpeg">
+            </audio>
+        """, unsafe_allow_html=True)
+        st.audio("heartbeat-sound-effects-for-you-122458.mp3", start_time=0)
+        st.markdown("⬆️ Click above if the sound didn’t auto-play.")
 
-    try:
-        df = pd.read_csv("bmi.csv")  # ensure this file is alongside app.py
+    # Doctor Advice
+    st.markdown("## 👨‍⚕️ Doctor's Advice:")
+    advice = {
+        "Underweight": "Try to include more calories and protein-rich foods. Consult a nutritionist.",
+        "Normal": "Great! Keep maintaining your healthy lifestyle.",
+        "Overweight": "Consider a balanced diet and regular physical activity.",
+        "Obese": "Seek professional medical advice and adopt a healthier routine ASAP."
+    }
+    st.info(advice[category])
 
-        # Find the BMI-class column flexibly
-        bmi_col = next(
-            (c for c in df.columns if "bmi" in c.lower() and "class" in c.lower()),
-            None
-        )
+    # Motivational Quotes Carousel
+    st.markdown("## 🌟 Motivational Quotes")
+    quotes = [
+        "“Your body deserves the best.” 💪",
+        "“Every healthy choice is a step toward a better you.” 🌱",
+        "“Don't wish for it, work for it.” 🔥",
+        "“It’s never too early or too late to work towards being the healthiest you.” 🧘‍♀️"
+    ]
 
-        if bmi_col:
-            counts = df[bmi_col].value_counts()
-            st.write(f"Using column: **{bmi_col}**")
-            st.bar_chart(counts)
-        else:
-            st.error("Couldn’t find a column with ‘bmi’+‘class’ in its name.")
-    except FileNotFoundError:
-        st.error("Dataset file `bmi.csv` not found. Please add it next to this script.")
+    idx = random.randint(0, len(quotes) - 1)
+    st.success(quotes[idx])
+
+    # Fun Fact
+    st.markdown("### 🤓 Fun Fact")
+    st.markdown(
+        "Did you know? A BMI between 18.5 and 24.9 is linked to lower risks of heart disease and diabetes. "
+        "Stay in the zone! 🎯"
+    )
+
 else:
-    st.warning("Please enter valid height and weight values to calculate BMI.")
+    st.warning("Please enter a valid height to calculate BMI.")
 
