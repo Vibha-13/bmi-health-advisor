@@ -1,41 +1,88 @@
+import streamlit as st 
 import streamlit as st
+import pandas as pd
+import matplotlib.pyplot as plt
+import seaborn as sns
+import random
 
-st.title("BMI Calculator & Health Advisor")
+st.set_page_config(page_title="BMI Calculator & Health Advisor", layout="centered")
+st.title("💪 BMI Calculator & Health Advisor")
 
-# Input fields
-weight = st.number_input("Enter your weight (in kg):", min_value=1.0)
-height = st.number_input("Enter your height (in meters):", min_value=0.1)
+# User Input
+weight = st.number_input("Enter your weight (in kg):", min_value=1.0, step=0.5)
+height = st.number_input("Enter your height (in meters):", min_value=0.1, step=0.01)
 
-# BMI calculation
-if height > 0:
-    bmi = weight / (height * height)
-    st.write(f"Your BMI is: {bmi:.2f}")
+if weight and height:
+    bmi = round(weight / (height ** 2), 2)
 
-    # Progress bar showing BMI level
-    progress = int(bmi)  # We can use BMI as the scale for progress bar
-    st.progress(progress / 40)  # Adjusting scale for a more visual result
-
-    # Health advice with emojis and tips
+    # Determine category
     if bmi < 18.5:
-        st.warning("You are underweight. 🍃")
-        st.markdown("- Try eating nutrient-rich foods.")
-        st.markdown("- Include healthy fats and proteins.")
-        st.markdown("- Consider speaking to a dietitian.")
-
-    elif 18.5 <= bmi < 24.9:
-        st.success("You have a normal weight. Great job! ✨")
-        st.markdown("- Keep maintaining a balanced diet.")
-        st.markdown("- Stay active with regular exercises.")
-        st.markdown("- Drink plenty of water.")
-
-    elif 25 <= bmi < 29.9:
-        st.info("You are overweight. ⚠️")
-        st.markdown("- Reduce sugary and fried foods.")
-        st.markdown("- Try 30 minutes of walking daily.")
-        st.markdown("- Get at least 7–8 hours of sleep.")
-
+        category = "underweight"
+        emoji = "🦴"
+    elif 18.5 <= bmi < 25:
+        category = "normal"
+        emoji = "💚"
+    elif 25 <= bmi < 30:
+        category = "overweight"
+        emoji = "⚠️"
     else:
-        st.error("You are obese. ❤️‍🩹")
-        st.markdown("- Consult a healthcare provider.")
-        st.markdown("- Focus on portion control.")
-        st.markdown("- Start with low-impact exercises.")
+        category = "obese"
+        emoji = "❤️‍🩹"
+
+    st.subheader(f"Your BMI is: {bmi}")
+    st.markdown(f"You are **{category}**. {emoji}")
+
+    # Horizontal progress bar
+    st.progress(min(bmi / 40, 1.0))
+
+    # Health tips
+    st.subheader("💡 Health Tips")
+    tips = {
+        "underweight": [
+            "Eat more frequently.",
+            "Choose nutrient-rich foods.",
+            "Try smoothies and shakes."
+        ],
+        "normal": [
+            "Keep up the good work!",
+            "Maintain a balanced diet.",
+            "Stay active every day."
+        ],
+        "overweight": [
+            "Reduce sugary and fried foods.",
+            "Try 30 minutes of walking daily.",
+            "Get at least 7–8 hours of sleep."
+        ],
+        "obese": [
+            "Consult a healthcare provider.",
+            "Focus on portion control.",
+            "Start with low-impact exercises."
+        ]
+    }
+    for tip in tips[category]:
+        st.write(f"👉 {tip}")
+
+    # BMI Category Chart
+    st.subheader("📊 BMI Category Distribution")
+    try:
+        data = pd.read_csv("bmi.csv")
+        if "bmi_class" in data.columns:
+            fig, ax = plt.subplots()
+            sns.countplot(data=data, x='bmi_class', palette="pastel", ax=ax)
+            ax.set_title("BMI Class Counts")
+            st.pyplot(fig)
+        else:
+            st.warning("📁 'bmi_class' column not found in the dataset.")
+    except FileNotFoundError:
+        st.error("CSV file not found. Please add 'bmi.csv' to your project folder.")
+
+    # Motivational Quote
+    st.subheader("🌟 Motivational Quote")
+    quotes = [
+        "Your body can do it. It's time to convince your mind.",
+        "Fitness is not about being better than someone else. It’s about being better than you used to be.",
+        "The groundwork of all happiness is health."
+    ]
+    st.success(random.choice(quotes))
+
+
