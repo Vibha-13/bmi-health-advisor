@@ -45,6 +45,7 @@ if weight and height:
     elif bmi < 30:
         category = "Overweight"
         st.info("You are overweight. ⚠️")
+        st.snow()  # gentle snow effect for Overweight too
         tips = [
             "Reduce sugary & fried foods.",
             "Aim for 30 min of walking daily.",
@@ -53,6 +54,9 @@ if weight and height:
     else:
         category = "Obese"
         st.error("You are obese. ❤️‍🩹")
+        st.spinner("Let’s take this step by step. 👣")  # A calming effect for obese category
+        st.balloons()  # Add balloons for encouragement
+        st.audio("heartbeat.mp3", start_time=0)  # Play heartbeat sound effect for Obese
         tips = [
             "Consult a healthcare provider.",
             "Practice portion control.",
@@ -71,6 +75,10 @@ if weight and height:
         "“Small progress each day adds up to big results!”"
     ]
     st.markdown(f"**💬 Motivation:** *{random.choice(quotes)}*")
+
+    # ——— Confetti for Success ———
+    if category == "Normal":
+        st.balloons()  # Add balloons for positive feedback when the BMI is in the normal range.
 
     # ——— BMI Class Distribution Chart ———
     st.markdown("---")
@@ -93,4 +101,6 @@ if weight and height:
             st.error("Couldn’t find a column with ‘bmi’+‘class’ in its name.")
     except FileNotFoundError:
         st.error("Dataset file `bmi.csv` not found. Please add it next to this script.")
+else:
+    st.warning("Please enter valid height and weight values to calculate BMI.")
 
