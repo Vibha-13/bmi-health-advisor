@@ -1,66 +1,82 @@
 import streamlit as st
 import pandas as pd
+import matplotlib.pyplot as plt
+import seaborn as sns
 
-# Title of the app
-st.title("BMI Calculator & Health Advisor")
+st.set_page_config(page_title="BMI Calculator & Health Advisor", layout="centered")
+
+st.title("💪 BMI Calculator & Health Advisor")
 
 # Input fields
 weight = st.number_input("Enter your weight (in kg):", min_value=1.0)
 height = st.number_input("Enter your height (in meters):", min_value=0.1)
 
 # BMI calculation
-if height > 0:   
+if height > 0:
     bmi = weight / (height * height)
-    st.write(f"Your BMI is: {bmi:.2f}")
-    
-    # Progress bar showing BMI level
-    progress = int(bmi)  # We can use BMI as the scale for progress bar
-    st.progress(progress / 40)  # Adjusting scale for a more visual result
-    
-    # Health advice with emojis and tips
+    st.write(f"### 📏 Your BMI is: `{bmi:.2f}`")
+
+    # Determine BMI category
     if bmi < 18.5:
-        st.write("You are underweight. 🏃‍♂️💪")
-        st.write("**Health Tips:**")
-        st.write("1. Increase calorie intake with healthy foods.")
-        st.write("2. Focus on strength training exercises.")
-        st.write("3. Get enough sleep for recovery.")
+        category = "Underweight"
     elif 18.5 <= bmi < 24.9:
-        st.write("You have a healthy weight. 😊🌱")
-        st.write("**Health Tips:**")
-        st.write("1. Maintain a balanced diet.")
-        st.write("2. Stay active with regular exercises.")
-        st.write("3. Keep up your healthy lifestyle!")
+        category = "Normal"
     elif 25 <= bmi < 29.9:
-        st.write("You are overweight. ⚠️")
-        st.write("**Health Tips:**")
-        st.write("1. Reduce sugary and fried foods.")
-        st.write("2. Try 30 minutes of walking daily.")
-        st.write("3. Get at least 7–8 hours of sleep.")
+        category = "Overweight"
     else:
-        st.write("You are obese. 🚨")
-        st.write("**Health Tips:**")
-        st.write("1. Consult a healthcare provider for a plan.")
-        st.write("2. Focus on reducing calorie intake.")
-        st.write("3. Incorporate more cardio and strength training exercises.")
+        category = "Obese"
 
-# Load dataset for BMI category distribution
-df = pd.read_csv('your_dataset.csv')
+    st.write(f"### 🧠 You are: **{category}**")
 
-# ——— BMI Category Chart ———
-st.subheader("📊 BMI Category Distribution")
+    # Progress bar showing BMI level
+    st.progress(min(bmi / 40, 1.0))  # cap at 1.0 to avoid overfill
 
-# Automatically find the BMI-category column
-bmi_col = None
-for col in df.columns:
-    low = col.lower().replace(" ", "")
-    if "bmi" in low and "class" in low:
-        bmi_col = col
-        break
+    # Tips dictionary
+    tips = {
+        "Underweight": [
+            "Include more calories from healthy fats and proteins.",
+            "Consider eating more frequently.",
+            "Include strength training exercises."
+        ],
+        "Normal": [
+            "Keep up your balanced diet!",
+            "Continue regular physical activity.",
+            "Stay hydrated and sleep well."
+        ],
+        "Overweight": [
+            "Reduce sugary and fried foods.",
+            "Try 30 minutes of walking daily.",
+            "Get at least 7–8 hours of sleep."
+        ],
+        "Obese": [
+            "Consult a nutritionist for a meal plan.",
+            "Start with light exercises regularly.",
+            "Avoid processed and high-calorie foods."
+        ]
+    }
 
-if bmi_col:
-    st.write(f"Using column: **{bmi_col}**")
-    counts = df[bmi_col].value_counts()
-    st.bar_chart(counts)
+    st.markdown("### 🩺 Doctor's Advice")
+    for tip in tips[category]:
+        st.write("•", tip)
+
+    # Fun BMI category bar chart
+    data = {
+        'Category': ['Underweight', 'Normal', 'Overweight', 'Obese'],
+        'Emoji': ['🦴', '💚', '⚠️', '🚨'],
+        'Count': [1 if category == cat else 0 for cat in ['Underweight', 'Normal', 'Overweight', 'Obese']]
+    }
+    df = pd.DataFrame(data)
+
+    st.markdown("### 📊 Your BMI Category")
+
+    fig, ax = plt.subplots(figsize=(6, 3))
+    sns.barplot(data=df, x='Category', y='Count', hue='Emoji', dodge=False, palette='Blues')
+    plt.xlabel("BMI Category")
+    plt.ylabel("")
+    plt.yticks([])
+    plt.title("You fall into this category 👇")
+    st.pyplot(fig)
+
 else:
-    st.error("Couldn’t find a BMI-category column (looking for name containing “bmi”+“class”).")
-.
+    st.warning("Please enter a valid height to calculate BMI.")
+
